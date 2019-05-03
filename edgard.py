@@ -58,70 +58,33 @@ display(df)
 
 # COMMAND ----------
 
-dbutils.fs.ls('/mnt/adlgen1/')
+dbutils.fs.mkdirs('/mnt/adlgen1/test-data/2019')
+dbutils.fs.ls('/mnt/adlgen1/test-data')
+
 
 # COMMAND ----------
 
-def download(url, file):
-  import urllib
+def download(url, file, year):
+  import urllib.request
   
-  with open('/dbfs/mnt/adlgen1/test-data/' + file, 'wb') as f:
+  with open('/dbfs/mnt/adlgen1/test-data/' + str(year) + '/' + file, 'wb') as f:
     f.write(urllib.request.urlopen(url).read())
   
-spark.udf.register("udfDownload", download)
+# spark.udf.register("udfDownload", download)
 
-download('https://www.sec.gov/Archives/edgar/data/1000045/0001193125-18-343069.txt', '0001193125-18-343069.txt')
+download('https://www.sec.gov/Archives/edgar/data/1000045/0001193125-18-343069.txt', '0001193125-18-343069.txt', 2019)
 
 # COMMAND ----------
 
-df.rdd.map(lambda r: download(r.url, r.file)).take(1)
+# so now 
+df.rdd.map(lambda r: download(r.url, r.file, 2019)).take(10)
 
+dbutils.fs.ls('/mnt/adlgen1/test-data/2019')
 #df.rdd.take(1)[0].file
 
 # COMMAND ----------
 
-dbutils.fs.mkdirs("dbfs:/temp")
-dbutils.fs.mkdirs("dbfs:/temp/" + str(start_year))
-
-
-# COMMAND ----------
-
-for filedown in listfilestodownload:
-    print (filedown)
-    count= count+1
-    filename2 = filedown[48:].replace('/', '_')
-    print(filename2)
-    #try:
-    f = open( '/dbfs/temp/' + str(start_year)  +'/' + filename2,'wb')
-    f.write(urllib.request.urlopen(filedown).read())
-    f.close()
-
-# COMMAND ----------
-
-dbutils.fs.ls("dbfs:/temp/" + str(start_year))
-
-# COMMAND ----------
-
-finaltocp=[]
-import ntpath
-for file in dbutils.fs.ls("dbfs:/temp/" + str(start_year)):
-  finaltocp.append('temp/' + str(start_year) + '/' + file.name)
-
-# COMMAND ----------
-
-print(finaltocp)
-
-# COMMAND ----------
-
-
-for filecp in finaltocp:
-  print('dbfs:/' + filecp)
-  #dbutils.fs.cp('dbfs:' + file,'adl:///' + file)
-
-
-# COMMAND ----------
-
-dbutils.fs.head("dbfs:/temp/2018/0000919574-18-007099.txt")
+dbutils.fs.head("dbfs:/mnt/adlgen1/test-data/2019/0000919574-18-007099.txt")
 
 # COMMAND ----------
 
